@@ -1,6 +1,6 @@
 import { useState } from "react";
 
-function Registration() {
+function Registration({onRegisterSuccesful}) {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -14,6 +14,14 @@ function Registration() {
       return;
     }
 
+    //Storing data locally here
+    const userData = {
+      name,
+      email,
+      password,
+    };
+
+    localStorage.setItem("userData", JSON.stringify(userData));
     // for now just showing success
     setMessage("Registration successful ✅");
 
@@ -21,7 +29,15 @@ function Registration() {
     setName("");
     setEmail("");
     setPassword("");
+  
+
+  setTimeout(() => {
+  onRegisterSuccesful();  
+  },2000);
   };
+
+
+
 
   return (
     <div style={{ width: "300px", margin: "50px auto" }}>
