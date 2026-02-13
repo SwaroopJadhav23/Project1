@@ -5,8 +5,9 @@ function Registration({onRegisterSuccesful}) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [message, setMessage] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async(e) => {
     e.preventDefault();
 
     if (!name || !email || !password) {
@@ -14,26 +15,39 @@ function Registration({onRegisterSuccesful}) {
       return;
     }
 
-    //Storing data locally here
-    const userData = {
-      name,
-      email,
-      password,
-    };
+    try {
+      setLoading(true);
+      setMessage("");
+      const res = await fetch("http://localhost:5000/api/auth/register", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ name, email, password }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        // Successful registration
+        setMessage(data.message || "Registration Successful!");
+        // clear form
+        setName("");
+        setEmail("");
+        setPassword("");
+        setLoading(false);
+        setTimeout(() => {
+          onRegisterSuccesful();
+        }, 2000);
+        return;
+      }
 
-    localStorage.setItem("userData", JSON.stringify(userData));
-    // for now just showing success
-    setMessage("Registration successful ✅");
-
-    // clear form
-    setName("");
-    setEmail("");
-    setPassword("");
-  
-
-  setTimeout(() => {
-  onRegisterSuccesful();  
-  },2000);
+      // Non-OK response (400/500) -> show server-provided message if any
+      setMessage(data.message || "Registration failed");
+      setLoading(false);
+  } catch (err) {
+    console.error(err);
+    setMessage("Server error");
+    setLoading(false);
+  }
   };
 
 
@@ -52,6 +66,7 @@ function Registration({onRegisterSuccesful}) {
             placeholder="Enter name"
             value={name}
             onChange={(e) => setName(e.target.value)}
+            autoComplete="name"
           />
         </div>
 
@@ -61,6 +76,7 @@ function Registration({onRegisterSuccesful}) {
             placeholder="Enter email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
+            autoComplete="email"
           />
         </div>
 
@@ -70,10 +86,12 @@ function Registration({onRegisterSuccesful}) {
             placeholder="Enter password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
+            autoComplete="new-password"
           />
         </div>
 
-        <button type="submit">Register</button>
+        <button type="submit" disabled={loading}>
+          {loading ? "Registering..." : "Register"}</button>
       </form>
     </div>
   );
